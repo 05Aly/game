@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cartoon Escape Dash - Ultimate Version</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cartoon Escape Dash - Mobile Friendly</title>
     <style>
         :root {
             --primary: #6366f1;
@@ -17,6 +17,8 @@
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background-color: var(--bg-dark);
             font-family: 'Segoe UI', sans-serif; color: white;
+            /* منع التحديد واللمس المطول الذي يظهر قوائم المتصفح */
+            touch-action: none; -webkit-user-select: none;
         }
 
         #game-container {
@@ -25,9 +27,10 @@
         }
 
         canvas {
-            display: block; background-color: #333;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-            border-radius: 10px;
+            display: block; 
+            background-color: #333;
+            max-width: 100%; max-height: 100%;
+            object-fit: contain; /* يحافظ على أبعاد اللعبة صحيحة */
         }
 
         .screen {
@@ -40,12 +43,12 @@
 
         .card {
             background: var(--glass); backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border); padding: 2.5rem;
-            border-radius: 1.5rem; text-align: center;
+            border: 1px solid var(--glass-border); padding: 1.5rem;
+            border-radius: 1rem; text-align: center; width: 80%; max-width: 400px;
         }
 
         h1 {
-            font-size: 3rem; margin-bottom: 1rem;
+            font-size: 2rem; margin-bottom: 1rem;
             background: linear-gradient(45deg, #60a5fa, #ec4899);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
@@ -53,32 +56,36 @@
         input[type="text"] {
             padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--glass-border);
             background: rgba(255, 255, 255, 0.1); color: white;
-            margin-bottom: 1rem; width: 250px; outline: none;
+            margin-bottom: 1rem; width: 90%; outline: none;
         }
-
-        button {
-            padding: 0.8rem 2rem; border-radius: 0.5rem; border: none;
-            background: var(--primary); color: white; cursor: pointer;
-            font-weight: bold; transition: 0.3s;
-        }
-
-        button:hover { transform: scale(1.05); background: #4f46e5; }
 
         #game-ui {
             position: absolute; top: 0; left: 0; width: 100%;
-            padding: 1rem; pointer-events: none; display: flex;
-            justify-content: space-between; z-index: 5;
+            padding: 0.5rem; pointer-events: none; display: flex;
+            flex-direction: column; justify-content: space-between; height: 100%;
+            z-index: 5; box-sizing: border-box;
         }
 
         #game-ui > div { pointer-events: auto; }
 
+        .top-bar { display: flex; justify-content: space-between; width: 100%; }
+
         .btn-group {
-            display: flex; gap: 5px; background: rgba(0,0,0,0.5);
-            padding: 10px; border-radius: 10px; margin-bottom: 5px;
+            display: flex; gap: 4px; background: rgba(0,0,0,0.5);
+            padding: 5px; border-radius: 8px; flex-wrap: wrap; justify-content: center;
         }
 
-        .btn-mini { padding: 5px 10px; font-size: 0.7rem; background: #444; }
+        .btn-mini { 
+            padding: 6px 8px; font-size: 0.6rem; background: #444; 
+            color: white; border: none; border-radius: 4px; cursor: pointer;
+        }
         .btn-mini.active { background: var(--secondary); }
+
+        /* تعديلات خاصة بالموبايل */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.5rem; }
+            .btn-mini { padding: 4px 6px; font-size: 0.55rem; }
+        }
     </style>
 </head>
 <body>
@@ -91,34 +98,36 @@
                 <h1>Cartoon Dash</h1>
                 <input type="text" id="player-name-input" placeholder="اكتب اسمك هنا" maxlength="15">
                 <br>
-                <button id="start-btn">ابدأ اللعب!</button>
+                <button id="start-btn" style="padding: 10px 30px; border-radius: 5px; background: var(--primary); color: white; border: none; font-weight: bold;">ابدأ اللعب!</button>
             </div>
         </div>
 
         <div id="game-over-screen" class="screen hidden">
             <div class="card">
                 <h1>انتهت اللعبة!</h1>
-                <p id="final-stats" style="font-size: 1.5rem;"></p>
-                <button id="restart-btn">حاول مرة أخرى</button>
+                <p id="final-stats" style="font-size: 1.2rem;"></p>
+                <button id="restart-btn" style="padding: 10px 30px; border-radius: 5px; background: var(--primary); color: white; border: none;">حاول مرة أخرى</button>
             </div>
         </div>
 
         <div id="game-ui" class="hidden">
-            <div style="background: rgba(0,0,0,0.6); padding: 10px; border-radius: 10px;">
-                <span id="display-name">Player</span>: <span id="score">0</span>m
-            </div>
-
-            <div>
-                <div class="btn-group">
-                    <button class="btn-mini char-btn active" data-char="0">غامبول (1)</button>
-                    <button class="btn-mini char-btn" data-char="1">داروين (2)</button>
-                    <button class="btn-mini char-btn" data-char="2">كلارنس (3)</button>
-                    <button class="btn-mini char-btn" data-char="3">كريغ (4)</button>
+            <div class="top-bar">
+                <div style="background: rgba(0,0,0,0.6); padding: 8px; border-radius: 8px; font-size: 0.8rem;">
+                    <span id="display-name">Player</span>: <span id="score">0</span>m
                 </div>
                 <div class="btn-group">
                     <button class="btn-mini world-btn active" data-world="0">عالم غامبول</button>
-                    <button class="btn-mini world-btn" data-world="1">عالم كلارنس</button>
-                    <button class="btn-mini world-btn" data-world="2">الجدول</button>
+                    <button class="btn-mini world-btn" data-world="1">كلارنس</button>
+                    <button class="btn-mini world-btn" data-world="2">كريغ</button>
+                </div>
+            </div>
+
+            <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 10px;">
+                <div class="btn-group">
+                    <button class="btn-mini char-btn active" data-char="0">غامبول</button>
+                    <button class="btn-mini char-btn" data-char="1">داروين</button>
+                    <button class="btn-mini char-btn" data-char="2">كلارنس</button>
+                    <button class="btn-mini char-btn" data-char="3">كريغ</button>
                 </div>
             </div>
         </div>
@@ -128,47 +137,20 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // --- الشخصيات ---
+        // أبعاد اللعبة الأصلية (ستتحجم تلقائياً)
+        const GAME_WIDTH = 800;
+        const GAME_HEIGHT = 400;
+
         const charImages = [];
-        const CHAR_SOURCES = [
-            "imgs/chars/gumball.png", 
-            "imgs/chars/darwin.png",  
-            "imgs/chars/clare.png", 
-            "imgs/chars/craig.png"    
-        ];
+        const CHAR_SOURCES = ["imgs/chars/gumball.png", "imgs/chars/darwin.png", "imgs/chars/clare.png", "imgs/chars/craig.png"];
+        CHAR_SOURCES.forEach(src => { const img = new Image(); img.src = src; charImages.push(img); });
 
-        CHAR_SOURCES.forEach(src => {
-            const img = new Image();
-            img.src = src;
-            charImages.push(img);
-        });
-
-        // --- الخلفيات ---
         const worldImages = [];
-        const WORLD_BG_SOURCES = [
-            "imgs/maps/gumball.jpeg",   // عالم غامبول
-            "imgs/maps/clarins.jpeg",  // عالم كلارنس
-            "imgs/maps/creg.jpeg"      // الجدول
-        ];
+        const WORLD_BG_SOURCES = ["imgs/maps/gumball.jpeg", "imgs/maps/clarins.jpeg", "imgs/maps/creg.jpeg"];
+        WORLD_BG_SOURCES.forEach(src => { const img = new Image(); img.src = src; worldImages.push(img); });
 
-        WORLD_BG_SOURCES.forEach(src => {
-            const img = new Image();
-            img.src = src;
-            worldImages.push(img);
-        });
-
-        const CHARACTERS = [
-            { name: 'Gumball', color: '#60a5fa' },
-            { name: 'Darwin', color: '#fb923c' },
-            { name: 'Clarence', color: '#fde047' },
-            { name: 'Craig', color: '#4ade80' }
-        ];
-
-        const WORLDS = [
-            { name: 'Junior High', bgFallback: '#87CEEB', ground: 'rgba(0,0,0,0.2)' },
-            { name: 'Aberdale', bgFallback: '#FFD700', ground: 'rgba(0,0,0,0.2)' },
-            { name: 'The Creek', bgFallback: '#228B22', ground: 'rgba(0,0,0,0.2)' }
-        ];
+        const CHARACTERS = [{ color: '#60a5fa' }, { color: '#fb923c' }, { color: '#fde047' }, { color: '#4ade80' }];
+        const WORLDS = [{ bg: '#87CEEB', ground: 'rgba(0,0,0,0.2)' }, { bg: '#FFD700', ground: 'rgba(0,0,0,0.2)' }, { bg: '#228B22', ground: 'rgba(0,0,0,0.2)' }];
 
         let gameState = 'START';
         let player, obstacles = [], score = 0, currentCharacterIndex = 0, currentWorldIndex = 0;
@@ -176,65 +158,67 @@
 
         class Player {
             constructor() {
-                this.width = 90;
-                this.height = 90;
-                this.x = 80;
-                this.y = 350 - this.height;
-                this.vy = 0;
-                this.grounded = true;
+                this.width = 60; this.height = 70;
+                this.x = 80; this.y = 350 - this.height;
+                this.vy = 0; this.grounded = true;
             }
             jump() { if (this.grounded) { this.vy = -14; this.grounded = false; } }
             update() {
-                this.vy += 0.7;
-                this.y += this.vy;
-                if (this.y + this.height >= 350) {
-                    this.y = 350 - this.height;
-                    this.vy = 0;
-                    this.grounded = true;
-                }
+                this.vy += 0.7; this.y += this.vy;
+                if (this.y + this.height >= 350) { this.y = 350 - this.height; this.vy = 0; this.grounded = true; }
             }
             draw() {
                 const img = charImages[currentCharacterIndex];
-                if (img.complete && img.naturalWidth !== 0) {
-                    ctx.drawImage(img, this.x, this.y, this.width, this.height);
-                } else {
-                    ctx.fillStyle = CHARACTERS[currentCharacterIndex].color;
-                    ctx.fillRect(this.x, this.y, this.width, this.height);
-                }
+                if (img.complete && img.naturalWidth !== 0) { ctx.drawImage(img, this.x, this.y, this.width, this.height); }
+                else { ctx.fillStyle = CHARACTERS[currentCharacterIndex].color; ctx.fillRect(this.x, this.y, this.width, this.height); }
             }
         }
 
         class Obstacle {
             constructor(x) {
-                this.width = 40;
-                this.height = 40 + Math.random() * 40;
-                this.x = x;
-                this.y = 350 - this.height;
+                this.width = 40; this.height = 40 + Math.random() * 40;
+                this.x = x; this.y = 350 - this.height;
             }
             update() { this.x -= obstacleSpeed; }
-            draw() {
-                ctx.fillStyle = '#ff4444';
-                ctx.strokeStyle = 'white';
-                ctx.lineWidth = 2;
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-                ctx.strokeRect(this.x, this.y, this.width, this.height);
-            }
+            draw() { ctx.fillStyle = '#ff4444'; ctx.fillRect(this.x, this.y, this.width, this.height); }
+        }
+
+        function resizeGame() {
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const scale = Math.min(viewportWidth / GAME_WIDTH, viewportHeight / GAME_HEIGHT);
+            
+            canvas.width = GAME_WIDTH;
+            canvas.height = GAME_HEIGHT;
+            canvas.style.width = (GAME_WIDTH * scale) + "px";
+            canvas.style.height = (GAME_HEIGHT * scale) + "px";
         }
 
         function init() {
-            canvas.width = 800; canvas.height = 400;
+            resizeGame();
+            window.addEventListener('resize', resizeGame);
+            
+            // دعم الكيبورد
             window.addEventListener('keydown', e => {
                 if (e.code === 'Space') { e.preventDefault(); player?.jump(); }
                 if (['1','2','3','4'].includes(e.key)) switchCharacter(parseInt(e.key)-1);
             });
-            canvas.addEventListener('mousedown', () => player?.jump());
+
+            // دعم اللمس للموبايل (لمسة واحدة للقفز)
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (gameState === 'PLAYING') player?.jump();
+            }, {passive: false});
+
+            // دعم الماوس
+            canvas.addEventListener('mousedown', () => { if (gameState === 'PLAYING') player?.jump(); });
+
             document.getElementById('start-btn').onclick = startGame;
             document.getElementById('restart-btn').onclick = startGame;
             document.querySelectorAll('.char-btn').forEach(btn => btn.onclick = (e) => switchCharacter(parseInt(e.target.dataset.char)));
             document.querySelectorAll('.world-btn').forEach(btn => btn.onclick = (e) => switchWorld(parseInt(e.target.dataset.world)));
             
-            // رسم أولي للخلفية قبل البداية
-            renderFrame(); 
+            renderFrame();
         }
 
         function switchCharacter(index) {
@@ -248,7 +232,7 @@
         }
 
         function startGame() {
-            const name = document.getElementById('player-name-input').value || 'بطل';
+            const name = document.getElementById('player-name-input').value.trim() || 'بطل';
             document.getElementById('display-name').textContent = name;
             gameState = 'PLAYING';
             document.getElementById('start-screen').classList.add('hidden');
@@ -261,48 +245,30 @@
         function renderFrame() {
             const world = WORLDS[currentWorldIndex];
             const bgImg = worldImages[currentWorldIndex];
-
-            // رسم الخلفية (صورة أو لون احتياطي)
-            if (bgImg && bgImg.complete && bgImg.naturalWidth !== 0) {
-                ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
-            } else {
-                ctx.fillStyle = world.bgFallback;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-
-            // رسم الأرضية
-            ctx.fillStyle = world.ground;
-            ctx.fillRect(0, 350, canvas.width, 50);
-
+            if (bgImg && bgImg.complete && bgImg.naturalWidth !== 0) { ctx.drawImage(bgImg, 0, 0, GAME_WIDTH, GAME_HEIGHT); }
+            else { ctx.fillStyle = world.bg; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT); }
+            ctx.fillStyle = world.ground; ctx.fillRect(0, 350, GAME_WIDTH, 50);
             if (player) player.draw();
             obstacles.forEach(obs => obs.draw());
         }
 
         function gameLoop() {
             if (gameState !== 'PLAYING') return;
-            
-            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.clearRect(0,0,GAME_WIDTH,GAME_HEIGHT);
             renderFrame();
-
             player.update();
-
-            if (frameCount % 90 === 0) obstacles.push(new Obstacle(canvas.width));
-            
+            if (frameCount % 90 === 0) obstacles.push(new Obstacle(GAME_WIDTH));
             for (let i = obstacles.length - 1; i >= 0; i--) {
                 let obs = obstacles[i];
                 obs.update();
-                
-                // تصادم
                 if (player.x < obs.x + obs.width && player.x + player.width > obs.x &&
                     player.y < obs.y + obs.height && player.y + player.height > obs.y) {
                     gameState = 'GAME_OVER';
                     document.getElementById('game-over-screen').classList.remove('hidden');
                     document.getElementById('final-stats').textContent = `النتيجة: ${Math.floor(score)} متر`;
                 }
-                
                 if (obs.x + obs.width < 0) obstacles.splice(i, 1);
             }
-
             score += 0.1;
             document.getElementById('score').textContent = Math.floor(score);
             obstacleSpeed += 0.001;
@@ -313,5 +279,4 @@
         init();
     </script>
 </body>
-
 </html>
